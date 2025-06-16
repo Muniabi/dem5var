@@ -1,3 +1,5 @@
+\! chcp 1251
+
 -- Создание таблицы "Типы материалов"
 CREATE TABLE MaterialTypes (
     material_type_id SERIAL PRIMARY KEY,

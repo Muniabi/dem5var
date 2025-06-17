@@ -142,8 +142,9 @@ class DatabaseManager:
     # Методы для работы с материалами
     def get_materials(self):
         self.cursor.execute("""
-            SELECT m.material_id, m.material_name, mt.type_name, m.unit_price, 
-                   m.quantity_in_stock, m.min_quantity, m.unit_of_measure
+            SELECT m.material_id, m.material_name, mt.material_type_id, m.unit_price, 
+                   m.quantity_in_stock, m.min_quantity, m.package_quantity, m.unit_of_measure,
+                   mt.type_name
             FROM Materials m
             JOIN MaterialTypes mt ON m.material_type_id = mt.material_type_id
         """)
@@ -396,9 +397,9 @@ class MainWindow(StyledMainWindow):
         
         # Таблица материалов
         self.materials_table = QTableWidget()
-        self.materials_table.setColumnCount(7)
+        self.materials_table.setColumnCount(8)
         self.materials_table.setHorizontalHeaderLabels(
-            ["ID", "Наименование", "Тип", "Цена", "Количество", "Мин. количество", "Ед. измерения"]
+            ["ID", "Наименование", "Тип", "Цена", "Количество", "Мин. количество", "Кол-во в упаковке", "Ед. измерения"]
         )
         self.materials_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.materials_table.verticalHeader().setVisible(False)
@@ -451,10 +452,28 @@ class MainWindow(StyledMainWindow):
         materials = self.db.get_materials()
         self.materials_table.setRowCount(len(materials))
         for row, material in enumerate(materials):
-            for col, value in enumerate(material):
-                item = QTableWidgetItem(str(value))
-                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-                self.materials_table.setItem(row, col, item)
+            # ID
+            self.materials_table.setItem(row, 0, QTableWidgetItem(str(material[0])))
+            # Наименование
+            self.materials_table.setItem(row, 1, QTableWidgetItem(material[1]))
+            # Тип (используем type_name)
+            self.materials_table.setItem(row, 2, QTableWidgetItem(material[8]))
+            # Цена
+            self.materials_table.setItem(row, 3, QTableWidgetItem(str(material[3])))
+            # Количество
+            self.materials_table.setItem(row, 4, QTableWidgetItem(str(material[4])))
+            # Мин. количество
+            self.materials_table.setItem(row, 5, QTableWidgetItem(str(material[5])))
+            # Кол-во в упаковке
+            self.materials_table.setItem(row, 6, QTableWidgetItem(str(material[6])))
+            # Ед. измерения
+            self.materials_table.setItem(row, 7, QTableWidgetItem(material[7]))
+            
+            # Делаем все ячейки нередактируемыми
+            for col in range(8):
+                item = self.materials_table.item(row, col)
+                if item:
+                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         self.materials_table.resizeColumnsToContents()
     
     def add_material(self):
